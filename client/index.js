@@ -10,6 +10,9 @@ var port = process.env.PORT || 3000;
 var parentDir = '/home/aaditya/Desktop/sync';
 var serverAddr = 'http://localhost:5000';
 
+var signature = 'sign1';
+var timestamp = new Date().getTime();
+
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({
   extended:true
@@ -33,6 +36,8 @@ fs.watch(parentDir, {recursive : true}, function(eventType, filename){
         }
         var changes = {
           "file":filename,
+          "signature":signature,
+          "timestamp":timestamp,
           "content": data
         };
         request(serverAddr+'/'+filename, function(error, response, body) {
@@ -57,7 +62,6 @@ fs.watch(parentDir, {recursive : true}, function(eventType, filename){
 
 app.post('/sync',function(req,res){
 	var file = {
-		"edit":false,
 		"name":req.body.file,
 		"content":req.body.content
 	};

@@ -52,6 +52,8 @@ fs.watch(parentDir, {recursive : true}, function(eventType, filename){
 app.post('/sync',function(req,res){
 	var file = {
 		"name":req.body.file,
+    "signature":req.body.signature,
+    "timestamp":req.body.timestamp,
 		"content":req.body.content,
     "sync":req.body.edit
 	};
@@ -60,6 +62,13 @@ app.post('/sync',function(req,res){
         return console.log(err);
     }
 		console.log("Change Synchronised: "+file.name);
+	});
+  fs.writeFile(__dirname+'/public/'+file.signature+'-'+file.timestamp+'-'+file.name, file.content, function(err) {
+  	if(err) {
+        return console.log(err);
+    }
+		console.log("Change Synchronised: "+file.name);
+    console.log("Branch Synchronised: "+file.signature+'-'+file.timestamp);
 	});
 });
 
