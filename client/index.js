@@ -8,6 +8,7 @@ var server = require('http').createServer(app);
 var port = process.env.PORT || 3000;
 
 var parentDir = '/home/aaditya/Desktop/sync';
+var serverAddr = 'http://localhost:5000';
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({
@@ -35,14 +36,14 @@ fs.watch(parentDir, {recursive : true}, function(eventType, filename){
           "file":filename,
           "content": data
         };
-        request.post('http://localhost:5000/sync',{json: changes},
-          function (error, response, body) {
-            if (!error && response.statusCode == 200) {
-              console.log(body)
-            }
-            console.log('Change Synchronised: '+filename)
-          });
-      });
+				request.post(serverAddr+'/sync',{json: changes},
+		        function (error, response, body) {
+		          if (!error && response.statusCode == 200) {
+		            console.log(body)
+		          }
+		          console.log('Change Synchronised: '+filename)
+						});
+				});
 	  }
 }
 });
@@ -53,11 +54,18 @@ app.post('/sync',function(req,res){
 		"name":req.body.file,
 		"content":req.body.content
 	};
-	fs.writeFile(parentDir+'/'+file.name, file.content, function(err) {
-  	if(err) {
-        return console.log(err);
-    }
-		console.log("Change Synchronised: "+file.name);
+	fs.readFile(serverAddr+'/'+file.name, 'utf8', function (err,data) {
+		if(data == file.content) {
+			console.log('File is the same.');
+		}
+		else {
+			fs.writeFile(parentDir+'/'+file.name, file.content, function(err) {
+		  	if(err) {
+		        return console.log(err);
+		    }
+				console.log("Change Synchronised: "+file.name);
+			});
+		}
 	});
 });
 
