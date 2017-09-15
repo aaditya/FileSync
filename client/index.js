@@ -32,18 +32,25 @@ fs.watch(parentDir, {recursive : true}, function(eventType, filename){
           return console.log(err);
         }
         var changes = {
-          "edit":true,
           "file":filename,
           "content": data
         };
-				request.post(serverAddr+'/sync',{json: changes},
-		        function (error, response, body) {
-		          if (!error && response.statusCode == 200) {
-		            console.log(body)
-		          }
-		          console.log('Change Synchronised: '+filename)
-						});
-				});
+        request(serverAddr+'/'+filename, function(error, response, body) {
+          if(body != data) {
+            var hiddenFilter = filename.split("");
+            console.log();
+            if(hiddenFilter[0] != ".") {
+              request.post(serverAddr+'/sync',{json: changes},
+      		        function (error, response, body) {
+      		          if (!error && response.statusCode == 200) {
+      		            console.log(body)
+      		          }
+      		          console.log('Change Synchronised: '+filename)
+      				});
+            }
+          }
+        });
+			});
 	  }
 }
 });
@@ -54,19 +61,12 @@ app.post('/sync',function(req,res){
 		"name":req.body.file,
 		"content":req.body.content
 	};
-	fs.readFile(serverAddr+'/'+file.name, 'utf8', function (err,data) {
-		if(data == file.content) {
-			console.log('File is the same.');
+  fs.writeFile(parentDir+'/'+file.name, file.content, function(err) {
+		if(err) {
+	     return console.log(err);
 		}
-		else {
-			fs.writeFile(parentDir+'/'+file.name, file.content, function(err) {
-		  	if(err) {
-		        return console.log(err);
-		    }
-				console.log("Change Synchronised: "+file.name);
-			});
-		}
-	});
+		console.log("Change Synchronised: "+file.name);
+		});
 });
 
 server.listen(port, function(){
